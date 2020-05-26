@@ -1,5 +1,6 @@
 export default {
-  defaultWidth: 550,
-  defaultHeight: 350,
+  width: 550,
+  height: 350,
+  marginTop: 25,
   barsCount: 5,
 };
