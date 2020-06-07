@@ -30,6 +30,13 @@ const getBarDivisionLabel = (min, max, barsCount) => {
   return ((max - min) / barsCount).toFixed();
 };
 
+const getOppositeSide = (currentSide) => {
+  if (currentSide === "left") return "right";
+  if (currentSide === "right") return "left";
+
+  return null;
+};
+
 const getParsedInitialData = (initialData) => {
   const parsedData = {
     abscissa: {},
@@ -78,5 +85,6 @@ export {
   getChartsMax,
   getBarDivision,
   getBarDivisionLabel,
+  getOppositeSide,
   getParsedInitialData,
 };

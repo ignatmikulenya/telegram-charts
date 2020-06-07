@@ -1,3 +1,5 @@
+import MiniMap from "./mini-map-navigation";
+
 import {
   getChartsMin,
   getChartsMax,
@@ -25,15 +27,24 @@ export default class BaseChart {
   }
 
   setComponent() {
-    const canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
+    const telegramChart = document.createElement("div");
+    telegramChart.classList.add("telegram-chart");
 
-    this.$component = canvas;
+    const chart = document.createElement("canvas");
+    chart.classList.add("chart");
+    chart.width = this.width;
+    chart.height = this.height;
+    telegramChart.appendChild(chart);
+
+    const miniMap = new MiniMap({ width: this.width });
+    telegramChart.appendChild(miniMap.component);
+
+    this.$component = telegramChart;
   }
 
   setContext() {
-    this.context = this.$component.getContext("2d");
+    const chart = this.$component.querySelector(".chart");
+    this.context = chart.getContext("2d");
   }
 
   prepare() {
@@ -41,8 +52,8 @@ export default class BaseChart {
     const max = getChartsMax(this.data.axisOfOrdinates);
 
     this.context.font = "10px Arial";
-    this.context.fillStyle = "#96A2AA";
-    this.context.strokeStyle = "#DEDEDE";
+    this.context.fillStyle = "#96A0AA";
+    this.context.strokeStyle = "#F0F0F0";
     const barDivision = getBarDivision(
       this.height - this.marginTop,
       this.barsCount

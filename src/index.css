@@ -1,0 +1,54 @@
+.telegram-chart {
+  width: 550px;
+}
+
+.mini-map {
+  position: relative;
+  height: 38px;
+}
+
+.mini-map__left,
+.mini-map__center,
+.mini-map__right {
+  position: absolute;
+  height: 100%;
+}
+
+.mini-map__left {
+  left: 0;
+  background-color: rgba(220, 230, 240, 0.3);
+}
+
+.mini-map__center {
+  top: 0;
+  box-sizing: border-box;
+  border: rgba(220, 230, 240, 0.5) solid;
+  border-width: 1px 4px;
+  cursor: pointer;
+}
+
+.mini-map__right {
+  right: 0;
+  background-color: rgba(220, 230, 240, 0.3);
+}
+
+.mini-map__left,
+.mini-map__right {
+  display: none;
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: w-resize;
+}
+
+.resizer__left {
+  right: 100%;
+}
+
+.resizer__right {
+  left: 100%;
+}
