@@ -6,17 +6,24 @@ export default class MiniMapNavigation {
     this.miniMapState = {
       left: { width: options.width - this.getInitialWindowWidth() },
       center: {
+        isDragging: false,
+        isResizing: false,
         component: null,
         currentSide: null,
         left: options.width - this.getInitialWindowWidth(),
         right: 0,
+        mouseX: null,
       },
       right: { width: 0 },
     };
 
-    this.mouseDownHandler = this.mouseDownHandler.bind(this);
-    this.mouseUpHandler = this.mouseUpHandler.bind(this);
-    this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
+    this.resizerMouseDownHandler = this.resizerMouseDownHandler.bind(this);
+    this.resizerMouseUpHandler = this.resizerMouseUpHandler.bind(this);
+    this.resizerMouseMoveHandler = this.resizerMouseMoveHandler.bind(this);
+
+    this.centerMouseDownHandler = this.centerMouseDownHandler.bind(this);
+    this.centerMouseUpHandler = this.centerMouseUpHandler.bind(this);
+    this.centerMouseMoveHandler = this.centerMouseMoveHandler.bind(this);
 
     this.setComponent();
   }
@@ -33,7 +40,7 @@ export default class MiniMapNavigation {
     return Math.round(this.width * 0.1);
   }
 
-  getResizerPosition(side, position) {
+  convertResizerPosition(side, position) {
     if (side === "right") {
       return this.width - position;
     }
@@ -42,17 +49,13 @@ export default class MiniMapNavigation {
   }
 
   getResizerNewPosition(side, clientX) {
-    let newPosition =
+    const newPosition =
       this.miniMapState.center[side] + clientX - this.miniMapState.center[side];
 
-    if (side === "right") {
-      newPosition = this.getResizerPosition(side, newPosition);
-    }
-
-    return newPosition;
+    return this.convertResizerPosition(side, newPosition);
   }
 
-  mouseMoveHandler(mousemoveEvent) {
+  resizerMouseMoveHandler(mousemoveEvent) {
     const { currentSide } = this.miniMapState.center;
     const newPosition = this.getResizerNewPosition(
       currentSide,
@@ -76,27 +79,68 @@ export default class MiniMapNavigation {
     }
   }
 
-  mouseUpHandler() {
+  resizerMouseUpHandler() {
     const { currentSide, component } = this.miniMapState.center;
+    this.miniMapState.center.isResizing = false;
     this.miniMapState.center[currentSide] = parseInt(
       component.style[currentSide],
       10
     );
 
-    document.removeEventListener("mousemove", this.mouseMoveHandler);
-    document.removeEventListener("mouseup", this.mouseUpHandler);
+    document.removeEventListener("mousemove", this.resizerMouseMoveHandler);
+    document.removeEventListener("mouseup", this.resizerMouseUpHandler);
   }
 
-  mouseDownHandler(mousedownEvent) {
-    const { side } = mousedownEvent.target.dataset;
-    this.miniMapState.center.currentSide = side;
-    this.miniMapState.center[side] = this.getResizerPosition(
-      side,
-      mousedownEvent.clientX
-    );
+  resizerMouseDownHandler(mousedownEvent) {
+    if (!this.miniMapState.center.isDragging) {
+      const { side } = mousedownEvent.target.dataset;
+      this.miniMapState.center.isResizing = true;
+      this.miniMapState.center.currentSide = side;
+      this.miniMapState.center[side] = this.convertResizerPosition(
+        side,
+        mousedownEvent.clientX
+      );
 
-    document.addEventListener("mousemove", this.mouseMoveHandler);
-    document.addEventListener("mouseup", this.mouseUpHandler);
+      document.addEventListener("mousemove", this.resizerMouseMoveHandler);
+      document.addEventListener("mouseup", this.resizerMouseUpHandler);
+    }
+  }
+
+  centerMouseMoveHandler(mousemoveEvent) {
+    const { mouseX, left, right } = this.miniMapState.center;
+    const delta = mousemoveEvent.clientX - mouseX;
+
+    const newLeft = left + delta;
+    const newRight = right - delta;
+    if (newLeft >= 0 && newRight >= 0) {
+      this.miniMapState.center.component.style.setProperty(
+        "left",
+        `${newLeft}px`
+      );
+      this.miniMapState.center.component.style.setProperty(
+        "right",
+        `${newRight}px`
+      );
+    }
+  }
+
+  centerMouseUpHandler() {
+    const { component } = this.miniMapState.center;
+    this.miniMapState.center.isDragging = false;
+    this.miniMapState.center.left = parseInt(component.style.left, 10);
+    this.miniMapState.center.right = parseInt(component.style.right, 10);
+
+    document.removeEventListener("mousemove", this.centerMouseMoveHandler);
+    document.removeEventListener("mouseup", this.centerMouseUpHandler);
+  }
+
+  centerMouseDownHandler(mousedownEvent) {
+    if (!this.miniMapState.center.isResizing) {
+      this.miniMapState.center.isDragging = true;
+      this.miniMapState.center.mouseX = mousedownEvent.clientX;
+      document.addEventListener("mousemove", this.centerMouseMoveHandler);
+      document.addEventListener("mouseup", this.centerMouseUpHandler);
+    }
   }
 
   setComponent() {
@@ -130,9 +174,11 @@ export default class MiniMapNavigation {
     miniMapCenter.appendChild(rightResizer);
 
     this.miniMapState.center.component = miniMapCenter;
-    leftResizer.addEventListener("mousedown", this.mouseDownHandler);
-    rightResizer.addEventListener("mousedown", this.mouseDownHandler);
+    leftResizer.addEventListener("mousedown", this.resizerMouseDownHandler);
+    rightResizer.addEventListener("mousedown", this.resizerMouseDownHandler);
     miniMap.appendChild(miniMapCenter);
+
+    miniMapCenter.addEventListener("mousedown", this.centerMouseDownHandler);
 
     const miniMapRight = document.createElement("div");
     miniMapRight.classList.add("mini-map__right");
