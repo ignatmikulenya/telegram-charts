@@ -4,7 +4,10 @@ export default class MiniMapNavigation {
   constructor(options) {
     this.width = options.width;
     this.miniMapState = {
-      left: { width: options.width - this.getInitialWindowWidth() },
+      left: {
+        component: null,
+        width: options.width - this.getInitialWindowWidth(),
+      },
       center: {
         isDragging: false,
         isResizing: false,
@@ -14,7 +17,10 @@ export default class MiniMapNavigation {
         right: 0,
         mouseX: null,
       },
-      right: { width: 0 },
+      right: {
+        component: null,
+        width: 0,
+      },
     };
 
     this.resizerMouseDownHandler = this.resizerMouseDownHandler.bind(this);
@@ -71,6 +77,10 @@ export default class MiniMapNavigation {
         this.width - newPosition - oppositePosition >
           this.getMinimalWindowWidth()
       ) {
+        this.miniMapState[currentSide].component.style.setProperty(
+          "width",
+          `${newPosition}px`
+        );
         this.miniMapState.center.component.style.setProperty(
           currentSide,
           `${newPosition}px`
@@ -83,6 +93,10 @@ export default class MiniMapNavigation {
     const { currentSide, component } = this.miniMapState.center;
     this.miniMapState.center.isResizing = false;
     this.miniMapState.center[currentSide] = parseInt(
+      component.style[currentSide],
+      10
+    );
+    this.miniMapState[currentSide].width = parseInt(
       component.style[currentSide],
       10
     );
@@ -100,6 +114,10 @@ export default class MiniMapNavigation {
         side,
         mousedownEvent.clientX
       );
+      this.miniMapState[side].width = this.convertResizerPosition(
+        side,
+        mousedownEvent.clientX
+      );
 
       document.addEventListener("mousemove", this.resizerMouseMoveHandler);
       document.addEventListener("mouseup", this.resizerMouseUpHandler);
@@ -113,9 +131,18 @@ export default class MiniMapNavigation {
     const newLeft = left + delta;
     const newRight = right - delta;
     if (newLeft >= 0 && newRight >= 0) {
+      this.miniMapState.left.component.style.setProperty(
+        "width",
+        `${newLeft}px`
+      );
       this.miniMapState.center.component.style.setProperty(
         "left",
         `${newLeft}px`
+      );
+
+      this.miniMapState.right.component.style.setProperty(
+        "width",
+        `${newRight}px`
       );
       this.miniMapState.center.component.style.setProperty(
         "right",
@@ -129,6 +156,8 @@ export default class MiniMapNavigation {
     this.miniMapState.center.isDragging = false;
     this.miniMapState.center.left = parseInt(component.style.left, 10);
     this.miniMapState.center.right = parseInt(component.style.right, 10);
+    this.miniMapState.left.width = parseInt(component.style.left, 10);
+    this.miniMapState.right.width = parseInt(component.style.right, 10);
 
     document.removeEventListener("mousemove", this.centerMouseMoveHandler);
     document.removeEventListener("mouseup", this.centerMouseUpHandler);
@@ -150,6 +179,7 @@ export default class MiniMapNavigation {
     const miniMapLeft = document.createElement("div");
     miniMapLeft.classList.add("mini-map__left");
     miniMapLeft.style.cssText = `width: ${this.miniMapState.left.width}px;`;
+    this.miniMapState.left.component = miniMapLeft;
     miniMap.appendChild(miniMapLeft);
 
     const miniMapCenter = document.createElement("div");
@@ -183,6 +213,7 @@ export default class MiniMapNavigation {
     const miniMapRight = document.createElement("div");
     miniMapRight.classList.add("mini-map__right");
     miniMapRight.style.cssText = `width: ${this.miniMapState.right.width}%;`;
+    this.miniMapState.right.component = miniMapRight;
     miniMap.appendChild(miniMapRight);
 
     this.$component = miniMap;
