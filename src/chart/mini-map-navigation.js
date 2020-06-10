@@ -125,29 +125,17 @@ export default class MiniMapNavigation {
   }
 
   centerMouseMoveHandler(mousemoveEvent) {
-    const { mouseX, left, right } = this.miniMapState.center;
-    const delta = mousemoveEvent.clientX - mouseX;
+    const { left, right, center } = this.miniMapState;
+    const delta = mousemoveEvent.clientX - center.mouseX;
 
-    const newLeft = left + delta;
-    const newRight = right - delta;
+    const newLeft = center.left + delta;
+    const newRight = center.right - delta;
     if (newLeft >= 0 && newRight >= 0) {
-      this.miniMapState.left.component.style.setProperty(
-        "width",
-        `${newLeft}px`
-      );
-      this.miniMapState.center.component.style.setProperty(
-        "left",
-        `${newLeft}px`
-      );
+      left.component.style.setProperty("width", `${newLeft}px`);
+      center.component.style.setProperty("left", `${newLeft}px`);
 
-      this.miniMapState.right.component.style.setProperty(
-        "width",
-        `${newRight}px`
-      );
-      this.miniMapState.center.component.style.setProperty(
-        "right",
-        `${newRight}px`
-      );
+      right.component.style.setProperty("width", `${newRight}px`);
+      center.component.style.setProperty("right", `${newRight}px`);
     }
   }
 

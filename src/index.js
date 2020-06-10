@@ -1,4 +1,4 @@
-import BaseChart from "./chart/base-chart";
+import LinearChart from "./chart/linear-chart";
 import config from "./chart/config";
 
 import { getParsedInitialData } from "./chart/utilities";
@@ -12,7 +12,7 @@ const parsedData = getParsedInitialData(firstChart);
 console.log(parsedData);
 
 const { width, height, marginTop, barsCount } = config;
-const chart = new BaseChart({
+const chart = new LinearChart({
   width,
   height,
   marginTop,
