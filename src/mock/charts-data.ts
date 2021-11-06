@@ -10,7 +10,9 @@
 // chart.colors – Color for each line in 6-hex-digit format (e.g. "#AAAAAA").
 // chart.names – Names for each line.
 
-export default [
+import { TChartsDataResponse } from "../types/chart";
+
+const data: TChartsDataResponse = [
   {
     columns: [
       [
@@ -3313,3 +3315,5 @@ export default [
     },
   },
 ];
+
+export default data;

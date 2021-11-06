@@ -1,5 +1,4 @@
-import BaseChart from "./base-chart";
-import MiniMap from "./mini-map-navigation";
+import MiniMap from "../../mini-map/mini-map";
 
 import {
   getChartsMin,
@@ -7,11 +6,17 @@ import {
   getXRatio,
   getYRatio,
   getBarDivision,
-  getBarDivisionLabel,
-} from "./utilities";
+  getBarDivisionLabelValue,
+} from "../../../utilities/conversions";
+
+import { BaseChart, IChartOptions } from "../../../types/chart";
 
 export default class LinearChart extends BaseChart {
-  setComponent() {
+  constructor(options: IChartOptions) {
+    super(options);
+  }
+
+  initializeComponent() {
     const telegramChart = document.createElement("div");
     telegramChart.classList.add("telegram-chart");
 
@@ -24,12 +29,21 @@ export default class LinearChart extends BaseChart {
     const miniMap = new MiniMap({ width: this.width });
     telegramChart.appendChild(miniMap.component);
 
-    this.$component = telegramChart;
+    this.component = telegramChart;
   }
 
-  setContext() {
-    const chart = this.$component.querySelector(".chart");
-    this.context = chart.getContext("2d");
+  initializeContext() {
+    const chart = this.component.querySelector(".chart");
+
+    if (chart) {
+      const context = (chart as HTMLCanvasElement).getContext("2d");
+
+      if (context) {
+        this.context = context;
+      } else {
+        super.initializeContext();
+      }
+    }
   }
 
   prepare() {
@@ -43,7 +57,11 @@ export default class LinearChart extends BaseChart {
       this.height - this.marginTop,
       this.barsCount
     );
-    const barDivisionLabel = getBarDivisionLabel(min, max, this.barsCount);
+    const barDivisionLabelValue = getBarDivisionLabelValue(
+      min,
+      max,
+      this.barsCount
+    );
     for (let i = 0; i < this.barsCount; i += 1) {
       const y = i * barDivision;
 
@@ -52,7 +70,7 @@ export default class LinearChart extends BaseChart {
       this.context.lineTo(this.width, this.height - y - this.context.lineWidth);
       this.context.stroke();
 
-      const label = (i * barDivisionLabel).toString();
+      const label = (i * barDivisionLabelValue).toString();
       this.context.fillText(label, 0, this.height - y - 8);
     }
 
@@ -62,13 +80,18 @@ export default class LinearChart extends BaseChart {
     this.data.axisOfOrdinates.forEach((axis) => {
       this.context.strokeStyle = axis.color;
       for (let i = 0; i < axis.values.length - 1; i += 1) {
-        this.context.beginPath();
-        this.context.moveTo(i * xRatio, this.height - axis.values[i] * yRatio);
-        this.context.lineTo(
-          (i + 1) * xRatio,
-          this.height - axis.values[i + 1] * yRatio
-        );
-        this.context.stroke();
+        const axisValue = axis.values[i];
+        const nextAxisValue = axis.values[i + 1];
+
+        if (axisValue != null && nextAxisValue != null) {
+          this.context.beginPath();
+          this.context.moveTo(i * xRatio, this.height - axisValue * yRatio);
+          this.context.lineTo(
+            (i + 1) * xRatio,
+            this.height - nextAxisValue * yRatio
+          );
+          this.context.stroke();
+        }
       }
     });
   }
