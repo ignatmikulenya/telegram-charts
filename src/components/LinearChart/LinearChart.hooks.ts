@@ -4,8 +4,8 @@ import { drawBars, drawChart } from "./LinearChart.utils";
 
 export const useChartCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvasWidth, setCanvasWidth] = useState<number | null>();
-  const [canvasHeight, setCanvasHeight] = useState<number | null>();
+  const [canvasWidth, setCanvasWidth] = useState<number>(0);
+  const [canvasHeight, setCanvasHeight] = useState<number>(0);
 
   useEffect(() => {
     const canvasComponent = canvasRef.current;
@@ -28,7 +28,7 @@ export const useLinearChart = (chart: Chart) => {
     if (canvasComponent) {
       const canvasContext = canvasComponent.getContext("2d");
 
-      if (canvasContext && canvasWidth != null && canvasHeight != null) {
+      if (canvasContext) {
         console.log("!!!REDRAW CHARTS");
 
         canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);

@@ -13,11 +13,10 @@ export const useMiniMap = (chart: Chart) => {
     if (canvasComponent) {
       const canvasContext = canvasComponent.getContext("2d");
 
-      if (canvasContext && canvasWidth != null && canvasHeight != null) {
+      if (canvasContext) {
         console.log("!!!REDRAW MINIMAP");
 
         canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
-
         drawChart(canvasComponent, chart);
       }
     }

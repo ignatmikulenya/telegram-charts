@@ -90,27 +90,23 @@ export const MiniMap: FC<MiniMapProps> = ({ chart, className }) => {
   const [hoverSizes, setHoverSizes] = useState<[number, number, number] | null>(
     null
   );
-  const leftResizerInitPosRef = useRef<number | null>(null);
-  const rightResizerInitPosRef = useRef<number | null>(null);
+  const centerSectionPosRef = useRef<number>(0);
+  const leftResizerInitPosRef = useRef<number>(0);
+  const rightResizerInitPosRef = useRef<number>(0);
   const currentResizerRef = useRef<null | "left" | "right">(null);
 
   const windowRef = useRef<HTMLDivElement | null>(null);
-  const windowInitWidthRef = useRef<number | null>(null);
+  const windowInitWidthRef = useRef<number>(0);
   const canWindowSlideRef = useRef(false);
-
-  const centerSectionPosRef = useRef<number | null>();
 
   const { canvasRef, canvasWidth, canvasHeight } = useMiniMap(chart);
 
   useEffect(() => {
-    const canvasComponent = canvasRef.current;
+    const newCenterSectionWidth = Math.round(canvasWidth * 0.15);
+    const newLeftBlurWidth = canvasWidth - newCenterSectionWidth;
 
-    if (canvasComponent) {
-      const windowWidth = Math.round(canvasComponent.offsetWidth * 0.15);
-      const leftSectionWidth = canvasComponent.offsetWidth - windowWidth;
-      setHoverSizes([leftSectionWidth, windowWidth, 0]);
-    }
-  }, [canvasRef]);
+    setHoverSizes([newLeftBlurWidth, newCenterSectionWidth, 0]);
+  }, [canvasWidth]);
 
   const handleLeftResizerMove = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
@@ -118,50 +114,32 @@ export const MiniMap: FC<MiniMapProps> = ({ chart, className }) => {
       const leftResizerInitPos = leftResizerInitPosRef.current;
       const windowInitWidth = windowInitWidthRef.current;
 
-      if (
-        currentResizer === "left" &&
-        canvasWidth != null &&
-        windowInitWidth != null &&
-        leftResizerInitPos != null
-      ) {
+      if (currentResizer === "left") {
         const minWindowWidth = Math.round(canvasWidth * 0.1);
         const clientX = event.clientX;
+        const toLeft = clientX < leftResizerInitPos;
 
-        if (clientX < leftResizerInitPos) {
-          const widthDelta = leftResizerInitPos - clientX;
-          const newWindowWidth = windowInitWidth + widthDelta;
+        const widthDelta = toLeft
+          ? leftResizerInitPos - clientX
+          : clientX - leftResizerInitPos;
 
-          setHoverSizes((prevSizes) => {
-            if (prevSizes == null) {
-              return prevSizes;
-            }
+        const newWindowWidth = toLeft
+          ? windowInitWidth + widthDelta
+          : windowInitWidth - widthDelta;
 
-            const [, , prevRightBlurWidth] = prevSizes;
-            const newLeftBlurWidth =
-              canvasWidth - prevRightBlurWidth - newWindowWidth;
+        setHoverSizes((prevSizes) => {
+          if (prevSizes == null) {
+            return prevSizes;
+          }
 
-            return newLeftBlurWidth >= 0
-              ? [newLeftBlurWidth, newWindowWidth, prevRightBlurWidth]
-              : prevSizes;
-          });
-        } else {
-          const widthDelta = clientX - leftResizerInitPos;
-          const newWindowWidth = windowInitWidth - widthDelta;
+          const [, , prevRightBlurWidth] = prevSizes;
+          const newLeftBlurWidth =
+            canvasWidth - prevRightBlurWidth - newWindowWidth;
 
-          setHoverSizes((prevSizes) => {
-            if (prevSizes == null) {
-              return prevSizes;
-            }
-
-            const [, , prevRightBlurWidth] = prevSizes;
-            const newLeftBlurWidth =
-              canvasWidth - prevRightBlurWidth - newWindowWidth;
-
-            return newWindowWidth > minWindowWidth
-              ? [newLeftBlurWidth, newWindowWidth, prevRightBlurWidth]
-              : prevSizes;
-          });
-        }
+          return newLeftBlurWidth >= 0 && newWindowWidth > minWindowWidth
+            ? [newLeftBlurWidth, newWindowWidth, prevRightBlurWidth]
+            : prevSizes;
+        });
       }
     },
     [canvasWidth]
@@ -173,50 +151,32 @@ export const MiniMap: FC<MiniMapProps> = ({ chart, className }) => {
       const rightResizerInitPos = rightResizerInitPosRef.current;
       const windowInitWidth = windowInitWidthRef.current;
 
-      if (
-        currentResizer === "right" &&
-        canvasWidth != null &&
-        windowInitWidth != null &&
-        rightResizerInitPos != null
-      ) {
+      if (currentResizer === "right") {
         const minWindowWidth = Math.round(canvasWidth * 0.1);
         const clientX = event.clientX;
+        const toRight = clientX > rightResizerInitPos;
 
-        if (clientX > rightResizerInitPos) {
-          const widthDelta = clientX - rightResizerInitPos;
-          const newWindowWidth = windowInitWidth + widthDelta;
+        const widthDelta = toRight
+          ? clientX - rightResizerInitPos
+          : rightResizerInitPos - clientX;
 
-          setHoverSizes((prevSizes) => {
-            if (prevSizes == null) {
-              return prevSizes;
-            }
+        const newWindowWidth = toRight
+          ? windowInitWidth + widthDelta
+          : windowInitWidth - widthDelta;
 
-            const [prevLeftBlurWidth] = prevSizes;
-            const newRightBlurWidth =
-              canvasWidth - prevLeftBlurWidth - newWindowWidth;
+        setHoverSizes((prevSizes) => {
+          if (prevSizes == null) {
+            return prevSizes;
+          }
 
-            return newRightBlurWidth >= 0
-              ? [prevLeftBlurWidth, newWindowWidth, newRightBlurWidth]
-              : prevSizes;
-          });
-        } else {
-          const widthDelta = rightResizerInitPos - clientX;
-          const newWindowWidth = windowInitWidth - widthDelta;
+          const [prevLeftBlurWidth] = prevSizes;
+          const newRightBlurWidth =
+            canvasWidth - prevLeftBlurWidth - newWindowWidth;
 
-          setHoverSizes((prevSizes) => {
-            if (prevSizes == null) {
-              return prevSizes;
-            }
-
-            const [prevLeftBlurWidth] = prevSizes;
-            const newRightBlurWidth =
-              canvasWidth - prevLeftBlurWidth - newWindowWidth;
-
-            return newWindowWidth > minWindowWidth
-              ? [prevLeftBlurWidth, newWindowWidth, newRightBlurWidth]
-              : prevSizes;
-          });
-        }
+          return newRightBlurWidth >= 0 && newWindowWidth > minWindowWidth
+            ? [prevLeftBlurWidth, newWindowWidth, newRightBlurWidth]
+            : prevSizes;
+        });
       }
     },
     [canvasWidth]
@@ -270,53 +230,39 @@ export const MiniMap: FC<MiniMapProps> = ({ chart, className }) => {
       const centerSectionPos = centerSectionPosRef.current;
       const windowComponent = windowRef.current;
 
-      if (
-        windowComponent != null &&
-        canvasWidth != null &&
-        centerSectionPos != null
-      ) {
+      if (windowComponent) {
         const clientX = event.clientX;
+        const toRight = clientX > centerSectionPos;
 
-        if (clientX > centerSectionPos) {
-          const positionDelta = clientX - centerSectionPos;
-          centerSectionPosRef.current = clientX;
+        const positionDelta = toRight
+          ? clientX - centerSectionPos
+          : centerSectionPos - clientX;
 
-          setHoverSizes((prevSizes) => {
-            if (prevSizes == null) {
-              return prevSizes;
-            }
+        centerSectionPosRef.current = clientX;
 
-            const [prevLeftBlurWidth, prevWindowWidth, prevRightBlurWidth] =
-              prevSizes;
-            const newRightBlurWidth = prevRightBlurWidth - positionDelta;
-            const newLeftBlurWidth = prevLeftBlurWidth + positionDelta;
+        setHoverSizes((prevSizes) => {
+          if (prevSizes == null) {
+            return prevSizes;
+          }
 
-            return newRightBlurWidth >= 0
-              ? [newLeftBlurWidth, prevWindowWidth, newRightBlurWidth]
-              : prevSizes;
-          });
-        } else {
-          const positionDelta = centerSectionPos - clientX;
-          centerSectionPosRef.current = clientX;
+          const [prevLeftBlurWidth, prevWindowWidth, prevRightBlurWidth] =
+            prevSizes;
 
-          setHoverSizes((prevSizes) => {
-            if (prevSizes == null) {
-              return prevSizes;
-            }
+          const newRightBlurWidth = toRight
+            ? prevRightBlurWidth - positionDelta
+            : prevRightBlurWidth + positionDelta;
 
-            const [prevLeftBlurWidth, prevWindowWidth, prevRightBlurWidth] =
-              prevSizes;
-            const newLeftBlurWidth = prevLeftBlurWidth - positionDelta;
-            const newRightBlurWidth = prevRightBlurWidth + positionDelta;
+          const newLeftBlurWidth = toRight
+            ? prevLeftBlurWidth + positionDelta
+            : prevLeftBlurWidth - positionDelta;
 
-            return newLeftBlurWidth >= 0
-              ? [newLeftBlurWidth, prevWindowWidth, newRightBlurWidth]
-              : prevSizes;
-          });
-        }
+          return newRightBlurWidth >= 0 && newLeftBlurWidth >= 0
+            ? [newLeftBlurWidth, prevWindowWidth, newRightBlurWidth]
+            : prevSizes;
+        });
       }
     },
-    [canvasWidth]
+    []
   );
 
   const handleMiniMapMouseMove = useCallback(
@@ -347,11 +293,7 @@ export const MiniMap: FC<MiniMapProps> = ({ chart, className }) => {
       onMouseLeave={handleMiniMapClearState}
       className={className}
     >
-      <StyledCanvas
-        ref={canvasRef}
-        width={canvasWidth ?? 0}
-        height={canvasHeight ?? 0}
-      />
+      <StyledCanvas ref={canvasRef} width={canvasWidth} height={canvasHeight} />
       {hoverSizes != null ? (
         <StyledHover>
           <StyledBlur width={hoverSizes[0]} />
